@@ -1,11 +1,17 @@
 from datetime import date, datetime
 from playsound import playsound
+from time import sleep
 import requests
 import json
 
 
 URL = "https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByDistrict"
 DISTRICT_ID = 307
+DELAY = 5
+FAILED_STATE = 2
+SUCCESS_STATE = 1
+NUM_CONSECUTIVE_FAILED_CASES_TO_ALERT = 20
+NUM_FAILED_CASES_TO_DISPLAY = 100
 
 
 def get_date():
@@ -21,9 +27,13 @@ def get_time():
     return current_time
 
 
-def alert_with_sound():
+def alert_with_sound(case):
+    if case == SUCCESS_STATE:
+        audio = "alert.mp3"
+    elif case == FAILED_STATE:
+        audio = "failed_alert.mp3"
     for i in range(2):
-        playsound('alert.mp3')
+        playsound(audio)
 
 
 def get_header_json():
@@ -45,7 +55,7 @@ def get_vaccine_status():
     params = {'district_id': DISTRICT_ID, 'date': get_date()}
     header = get_header_json()
     response = requests.get(url=URL, params=params, headers=header)
-    return response.text
+    return response
 
 
 def get_available_sessions(sessions):
@@ -61,10 +71,10 @@ def get_available_sessions(sessions):
 
 
 def check_availability(response):
-    response = json.loads(response)
-    centers = list(response["centers"])
     output = dict()
     output["is_available"] = False
+    response = json.loads(response)
+    centers = list(response["centers"])
     for center in centers:
         center = dict(center)
         sessions = center["sessions"]
@@ -77,13 +87,31 @@ def check_availability(response):
 
 
 def keep_checking_and_alert_if_found():
+    num_attempts = 0
+    num_failed_attempts = 0
+    consecutive_failed_attempt_count = 0
     while True:
+        sleep(DELAY)
         output_from_api = get_vaccine_status()
-        availability = check_availability(output_from_api)
+        if output_from_api.status_code != 200:
+            print("Failed Attempt")
+            num_failed_attempts += 1
+            if num_failed_attempts % NUM_FAILED_CASES_TO_DISPLAY == 0:
+                print("Number of failed Attempts: " + str(num_failed_attempts))
+            consecutive_failed_attempt_count += 1
+            if num_failed_attempts > NUM_CONSECUTIVE_FAILED_CASES_TO_ALERT:
+                alert_with_sound(FAILED_STATE)
+                consecutive_failed_attempt_count = 0
+            continue
+        else:
+            consecutive_failed_attempt_count = 0
+        num_attempts += 1
+        print("Attempt: " + str(num_attempts))
+        availability = check_availability(output_from_api.text)
         is_available = availability["is_available"]
         if is_available:
             print(availability["available_sessions"])
-            alert_with_sound()
+            alert_with_sound(SUCCESS_STATE)
 
 
 if __name__ == '__main__':
