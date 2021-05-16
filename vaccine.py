@@ -62,16 +62,16 @@ def get_available_sessions(sessions):
 
 def check_availability(response):
     response = json.loads(response)
-    centers = list(response.get("centers"))
+    centers = list(response["centers"])
     output = dict()
-    output.put("is_available", False)
+    output["is_available"] = False
     for center in centers:
         center = dict(center)
-        sessions = center.get("sessions")
+        sessions = center["sessions"]
         available_sessions = list(get_available_sessions(sessions))
         if available_sessions:
-            output.put("is_available", True)
-            output.put("available_sessions", available_sessions)
+            output["is_available"] = True
+            output["available_sessions"] = available_sessions
             return output
     return output
 
@@ -80,9 +80,9 @@ def keep_checking_and_alert_if_found():
     while True:
         output_from_api = get_vaccine_status()
         availability = check_availability(output_from_api)
-        is_available = availability.get("is_available")
+        is_available = availability["is_available"]
         if is_available:
-            print(availability.get("available_sessions"))
+            print(availability["available_sessions"])
             alert_with_sound()
 
 
