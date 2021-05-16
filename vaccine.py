@@ -99,7 +99,7 @@ def keep_checking_and_alert_if_found():
             if num_failed_attempts % NUM_FAILED_CASES_TO_DISPLAY == 0:
                 print("Number of failed Attempts: " + str(num_failed_attempts))
             consecutive_failed_attempt_count += 1
-            if num_failed_attempts > NUM_CONSECUTIVE_FAILED_CASES_TO_ALERT:
+            if consecutive_failed_attempt_count > NUM_CONSECUTIVE_FAILED_CASES_TO_ALERT:
                 alert_with_sound(FAILED_STATE)
                 consecutive_failed_attempt_count = 0
             continue
