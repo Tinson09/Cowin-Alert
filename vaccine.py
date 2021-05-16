@@ -9,7 +9,7 @@ import json
 URL = "https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByDistrict"
 DISTRICT_ID = 307
 MIN_DELAY_TIME = 0
-MAX_DELAY_TIME = 4
+MAX_DELAY_TIME = 6
 FAILED_STATE = 2
 SUCCESS_STATE = 1
 NUM_CONSECUTIVE_FAILED_CASES_TO_ALERT = 20
