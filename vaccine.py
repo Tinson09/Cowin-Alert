@@ -1,5 +1,6 @@
 from datetime import date, datetime
 from playsound import playsound
+from random import randint
 from time import sleep
 import requests
 import json
@@ -7,7 +8,8 @@ import json
 
 URL = "https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByDistrict"
 DISTRICT_ID = 307
-DELAY = 3
+MIN_DELAY_TIME = 0
+MAX_DELAY_TIME = 4
 FAILED_STATE = 2
 SUCCESS_STATE = 1
 NUM_CONSECUTIVE_FAILED_CASES_TO_ALERT = 20
@@ -25,6 +27,12 @@ def get_time():
     now = datetime.now()
     current_time = now.strftime("%H:%M:%S")
     return current_time
+
+
+def get_delay_time():
+    n = randint(MIN_DELAY_TIME, MAX_DELAY_TIME*10)
+    n /= 10
+    return n
 
 
 def alert_with_sound(case):
@@ -91,7 +99,7 @@ def keep_checking_and_alert_if_found():
     num_failed_attempts = 0
     consecutive_failed_attempt_count = 0
     while True:
-        sleep(DELAY)
+        sleep(get_delay_time())
         output_from_api = get_vaccine_status()
         if output_from_api.status_code != 200:
             print("Failed Attempt")
