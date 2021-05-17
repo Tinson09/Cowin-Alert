@@ -59,10 +59,24 @@ def get_header_json():
     return header
 
 
+def is_failed_attempt(response):
+    if response is None:
+        return True
+    if response.status_code != 200:
+        return True
+    return False
+    
+
 def get_vaccine_status():
-    params = {'district_id': DISTRICT_ID, 'date': get_date()}
-    header = get_header_json()
-    response = requests.get(url=URL, params=params, headers=header)
+    response = None
+    try:
+        params = {'district_id': DISTRICT_ID, 'date': get_date()}
+        header = get_header_json()
+        response = requests.get(url=URL, params=params, headers=header)
+    except requests.exceptions.ConnectionError as errc:
+        print("Network Error: Please check your network. Request retry initiated.")
+    except requests.exceptions.Timeout as errt:
+        print("Connection Timed out. Request retry initiated.")
     return response
 
 
@@ -73,8 +87,9 @@ def get_available_sessions(sessions):
         dose1_available_numbers = int(session.get("available_capacity_dose1"))
         dose2_available_numbers = int(session.get("available_capacity_dose2"))
         if dose1_available_numbers > 0 or dose2_available_numbers > 0:
-            session.put("time", get_time())
-            available_sessions.add(session)
+            print("Found a slot!!")
+            session["time"] = get_time()
+            available_sessions.append(session)
     return available_sessions
 
 
@@ -101,7 +116,7 @@ def keep_checking_and_alert_if_found():
     while True:
         sleep(get_delay_time())
         output_from_api = get_vaccine_status()
-        if output_from_api.status_code != 200:
+        if is_failed_attempt(output_from_api):
             print("Failed Attempt")
             num_failed_attempts += 1
             if num_failed_attempts % NUM_FAILED_CASES_TO_DISPLAY == 0:
