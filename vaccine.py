@@ -14,6 +14,7 @@ FAILED_STATE = 2
 SUCCESS_STATE = 1
 NUM_CONSECUTIVE_FAILED_CASES_TO_ALERT = 20
 NUM_FAILED_CASES_TO_DISPLAY = 30
+CHECK_FOR_SECOND_DOSE = False
 
 
 def get_date():
@@ -86,7 +87,9 @@ def get_available_sessions(sessions):
         session = dict(session)
         dose1_available_numbers = int(session.get("available_capacity_dose1"))
         dose2_available_numbers = int(session.get("available_capacity_dose2"))
-        if dose1_available_numbers > 0 or dose2_available_numbers > 0:
+        if CHECK_FOR_SECOND_DOSE:
+            dose1_available_numbers += dose2_available_numbers
+        if dose1_available_numbers > 0:
             print("Found a slot!!")
             session["time"] = get_time()
             available_sessions.append(session)
